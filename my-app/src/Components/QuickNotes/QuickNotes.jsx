@@ -9,18 +9,8 @@ function QuickNotes() {
 
   const formatDate = (date) => {
     const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ];
     const month = months[date.getMonth()];
     const day = date.getDate();
@@ -28,14 +18,10 @@ function QuickNotes() {
     const getOrdinalSuffix = (day) => {
       if (day > 3 && day < 21) return "th";
       switch (day % 10) {
-        case 1:
-          return "st";
-        case 2:
-          return "nd";
-        case 3:
-          return "rd";
-        default:
-          return "th";
+        case 1: return "st";
+        case 2: return "nd";
+        case 3: return "rd";
+        default: return "th";
       }
     };
 
@@ -44,9 +30,7 @@ function QuickNotes() {
     const ampm = hours >= 12 ? "PM" : "AM";
     const displayHours = hours % 12 || 12;
 
-    return `${month} ${day}${getOrdinalSuffix(
-      day
-    )} ${displayHours}:${minutes} ${ampm}`;
+    return `${month} ${day}${getOrdinalSuffix(day)} ${displayHours}:${minutes} ${ampm}`;
   };
 
   const addNote = () => {
@@ -65,9 +49,7 @@ function QuickNotes() {
   };
 
   const deleteNote = (noteId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete your note?"
-    );
+    const confirmDelete = window.confirm("Are you sure you want to delete your note?");
     if (confirmDelete) {
       setNotes(notes.filter((note) => note.id !== noteId));
     }
@@ -78,9 +60,36 @@ function QuickNotes() {
 
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height =
-        textareaRef.current.scrollHeight + "px";
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
     }
+  };
+
+  const openNote = (note) => {
+    const noteWindow = window.open(
+      "",
+      "_blank",
+      "width=500,height=500,left=200,top=200"
+    );
+
+    const title = note.title ? `<h2>${note.title}</h2>` : "";
+    const content = `<p>${note.content}</p>`;
+    const created = `<small>Created: ${formatDate(new Date(note.createdAt))}</small>`;
+
+    noteWindow.document.write(`
+      <html>
+        <head>
+          <title>QuickNote</title>
+        </head>
+        <body>
+          ${title}
+          ${content}
+          <br />
+          ${created}
+        </body>
+      </html>
+    `);
+
+    noteWindow.document.close();
   };
 
   return (
@@ -95,28 +104,33 @@ function QuickNotes() {
           onChange={(e) => setNoteTitle(e.target.value)}
           placeholder="Note title (optional)"
         />
-
         <textarea
           ref={textareaRef}
           value={noteContent}
           onChange={handleContentChange}
           placeholder="Write your note here..."
           rows={1}
-          style={{ overflow: "hidden" }}
         />
         <button onClick={addNote}>Add</button>
       </div>
 
       <div className="notes-container">
         {notes.map((note) => (
-          <div key={note.id} className="note-card">
+          <div
+            key={note.id}
+            className="note-card"
+            onClick={() => openNote(note)}
+          >
             {note.title && <h4>{note.title}</h4>}
             <div className="note-content">{note.content}</div>
             <div className="note-footer">
-              <span>{formatDate(note.createdAt)}</span>
+              <span>{formatDate(new Date(note.createdAt))}</span>
               <button
-                onClick={() => deleteNote(note.id)}
                 className="delete-btn"
+                onClick={(e) => {
+                  e.stopPropagation(); // prevent window.open
+                  deleteNote(note.id);
+                }}
               >
                 ×
               </button>
