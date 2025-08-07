@@ -1,7 +1,9 @@
 import { useState } from "react";
+import "./QuickNotes.css";
 
 function QuickNotes() {
   const [notes, setNotes] = useState([]);
+  const [noteTitle, setNoteTitle] = useState("");
   const [noteContent, setNoteContent] = useState("");
 
   const formatDate = (date) => {
@@ -51,12 +53,14 @@ function QuickNotes() {
 
     const newNote = {
       id: Date.now(),
+      title: noteTitle.trim() || null,
       content: noteContent,
       createdAt: new Date(),
     };
 
     setNotes([...notes, newNote]);
     setNoteContent("");
+    setNoteTitle("");
   };
 
   const deleteNote = (noteId) => {
@@ -74,60 +78,32 @@ function QuickNotes() {
 
       <div className="add-new-note-container">
         <h3>Add new note</h3>
+        <input
+          type="text"
+          value={noteTitle}
+          onChange={(e) => setNoteTitle(e.target.value)}
+          placeholder="Note title (optional)"
+        />
+
         <textarea
           value={noteContent}
           onChange={(e) => setNoteContent(e.target.value)}
           placeholder="Write your note here..."
           rows={4}
-          style={{
-            width: "100%",
-            fontSize: "14px",
-            borderRadius: "4px",
-          }}
         />
-        <br />
         <button onClick={addNote}>Add</button>
       </div>
 
-      <div className="notes-container"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-          gap: "15px",
-        }}
-      >
+      <div className="notes-container">
         {notes.map((note) => (
-          <div
-            key={note.id}
-            style={{
-              padding: "15px",
-              border: "1px solid #ddd",
-              borderRadius: "8px",
-            }}
-          >
+          <div key={note.id} className="note-card">
+            {note.title && <h4>{note.title}</h4>}
             <div className="note-content">{note.content}</div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                fontSize: "12px",
-                color: "#666",
-                paddingTop: "8px",
-                borderTop: "1px solid #eee",
-                marginTop: "10px",
-              }}
-            >
+            <div className="note-footer">
               <span>{formatDate(note.createdAt)}</span>
               <button
                 onClick={() => deleteNote(note.id)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#dc3545",
-                  fontSize: "16px",
-                  cursor: "pointer",
-                  padding: "2px 6px",
-                }}
+                className="delete-btn"
               >
                 ×
               </button>
