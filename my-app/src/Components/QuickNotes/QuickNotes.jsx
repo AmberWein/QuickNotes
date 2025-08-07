@@ -6,6 +6,7 @@ function QuickNotes() {
   const [noteTitle, setNoteTitle] = useState("");
   const [noteContent, setNoteContent] = useState("");
   const textareaRef = useRef(null);
+  const [selectedNote, setSelectedNote] = useState(null);
 
   const formatDate = (date) => {
     const months = [
@@ -41,6 +42,7 @@ function QuickNotes() {
       title: noteTitle.trim() || null,
       content: noteContent,
       createdAt: new Date(),
+      updatedAt: null,
     };
 
     setNotes([...notes, newNote]);
@@ -52,6 +54,7 @@ function QuickNotes() {
     const confirmDelete = window.confirm("Are you sure you want to delete your note?");
     if (confirmDelete) {
       setNotes(notes.filter((note) => note.id !== noteId));
+      if (selectedNote?.id === noteId) setSelectedNote(null);
     }
   };
 
@@ -65,31 +68,29 @@ function QuickNotes() {
   };
 
   const openNote = (note) => {
-    const noteWindow = window.open(
-      "",
-      "_blank",
-      "width=500,height=500,left=200,top=200"
-    );
+    setSelectedNote({...note});
+  };
 
-    const title = note.title ? `<h2>${note.title}</h2>` : "";
-    const content = `<p>${note.content}</p>`;
-    const created = `<small>Created: ${formatDate(new Date(note.createdAt))}</small>`;
+  const closeModal = () => {
+    setSelectedNote(null);
+  };
 
-    noteWindow.document.write(`
-      <html>
-        <head>
-          <title>QuickNote</title>
-        </head>
-        <body>
-          ${title}
-          ${content}
-          <br />
-          ${created}
-        </body>
-      </html>
-    `);
+  const handleModalChange = (field, value) => {
+    setSelectedNote(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
-    noteWindow.document.close();
+  const saveNoteChanges = () => {
+    if (!selectedNote.content.trim()) return;
+
+    setNotes(notes.map(note => 
+      note.id === selectedNote.id 
+      ? {...selectedNote, updatedAt: new Date()} 
+      : note
+    ));
+    setSelectedNote(null);
   };
 
   return (
@@ -110,6 +111,7 @@ function QuickNotes() {
           onChange={handleContentChange}
           placeholder="Write your note here..."
           rows={1}
+          style={{overflow: "hidden"}}
         />
         <button onClick={addNote}>Add</button>
       </div>
@@ -124,11 +126,16 @@ function QuickNotes() {
             {note.title && <h4>{note.title}</h4>}
             <div className="note-content">{note.content}</div>
             <div className="note-footer">
-              <span>{formatDate(new Date(note.createdAt))}</span>
+              <span>
+                Created: {formatDate(new Date(note.createdAt))}
+                {note.updatedAt && (
+                  <> | Updated: {formatDate(new Date(note.updatedAt))}</>
+                )}
+              </span>
               <button
                 className="delete-btn"
                 onClick={(e) => {
-                  e.stopPropagation(); // prevent window.open
+                  e.stopPropagation();
                   deleteNote(note.id);
                 }}
               >
@@ -140,6 +147,33 @@ function QuickNotes() {
       </div>
 
       {notes.length === 0 && <div>No notes yet, add your first note.</div>}
+
+      {selectedNote && (
+        <div className="modal-backdrop" onClick={closeModal}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <input
+              type="text"
+              value={selectedNote.title || ""}
+              onChange={(e) => handleModalChange("title", e.target.value)}
+              placeholder="Note title (optional)"
+            />
+            <textarea
+              value={selectedNote.content}
+              onChange={(e) => handleModalChange("content", e.target.value)}
+              rows={5}
+              style={{width: "100%"}}
+            />
+            <div className="modal-dates">
+              <small>Created: {formatDate(new Date(selectedNote.createdAt))}</small>
+              {selectedNote.updatedAt && (
+                <small> | Updated: {formatDate(new Date(selectedNote.updatedAt))}</small>
+              )}
+            </div>
+            <button onClick={saveNoteChanges}>Save</button>
+            <button onClick={closeModal} style={{marginLeft:"10px"}}>Cancel</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
