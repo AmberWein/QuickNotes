@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import "./QuickNotes.css";
 
 function QuickNotes() {
   const [notes, setNotes] = useState([]);
   const [noteTitle, setNoteTitle] = useState("");
   const [noteContent, setNoteContent] = useState("");
+  const textareaRef = useRef(null);
 
   const formatDate = (date) => {
     const months = [
@@ -72,6 +73,16 @@ function QuickNotes() {
     }
   };
 
+  const handleContentChange = (e) => {
+    setNoteContent(e.target.value);
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height =
+        textareaRef.current.scrollHeight + "px";
+    }
+  };
+
   return (
     <div className="QuickNotes-container">
       <h1>QuickNotes</h1>
@@ -86,10 +97,12 @@ function QuickNotes() {
         />
 
         <textarea
+          ref={textareaRef}
           value={noteContent}
-          onChange={(e) => setNoteContent(e.target.value)}
+          onChange={handleContentChange}
           placeholder="Write your note here..."
-          rows={4}
+          rows={1}
+          style={{ overflow: "hidden" }}
         />
         <button onClick={addNote}>Add</button>
       </div>
